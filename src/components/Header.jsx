@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, ChevronDown, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import useUser from "@/utils/useUser";
 
 export default function Header() {

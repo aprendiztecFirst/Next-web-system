@@ -51,8 +51,19 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
 }
 
 // Initialize PostgreSQL connection pool
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = NeonAdapter(pool);
+// Initialize PostgreSQL connection pool lazily
+let _pool: Pool | null = null;
+let _adapter: ReturnType<typeof NeonAdapter> | null = null;
+
+function getAdapter() {
+  if (!_adapter) {
+    if (!_pool) {
+      _pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    }
+    _adapter = NeonAdapter(_pool);
+  }
+  return _adapter;
+}
 
 const app = new Hono();
 
@@ -169,7 +180,7 @@ if (process.env.AUTH_SECRET) {
               }
 
               // logic to verify if user exists
-              const user = await adapter.getUserByEmail(email);
+              const user = await getAdapter().getUserByEmail(email);
               if (!user) {
                 return null;
               }
@@ -221,11 +232,11 @@ if (process.env.AUTH_SECRET) {
 
                 // logic to verify if user exists
                 console.log('[Signup] Checking if user already exists:', email);
-                const user = await adapter.getUserByEmail(email);
+                const user = await getAdapter().getUserByEmail(email);
 
                 if (!user) {
                   console.log('[Signup] Creating new user record for:', email);
-                  const newUser = await adapter.createUser({
+                  const newUser = await getAdapter().createUser({
                     id: crypto.randomUUID(),
                     emailVerified: null,
                     email,
@@ -234,7 +245,7 @@ if (process.env.AUTH_SECRET) {
                   });
 
                   console.log('[Signup] Linking credentials account for userId:', newUser.id);
-                  await adapter.linkAccount({
+                  await getAdapter().linkAccount({
                     extraData: {
                       password: await hash(password),
                     },

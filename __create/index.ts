@@ -50,6 +50,7 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
   };
 }
 
+<<<<<<< HEAD
 // Initialize SQLite database
 const db = new Database('database.sqlite');
 const adapter = SQLiteAdapter(db);
@@ -95,6 +96,22 @@ const adapter = SQLiteAdapter(db);
     console.error('[AUTO-REGISTRATION] Failed:', err);
   }
 })();
+=======
+// Initialize PostgreSQL connection pool
+// Initialize PostgreSQL connection pool lazily
+let _pool: Pool | null = null;
+let _adapter: ReturnType<typeof NeonAdapter> | null = null;
+
+function getAdapter() {
+  if (!_adapter) {
+    if (!_pool) {
+      _pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    }
+    _adapter = NeonAdapter(_pool);
+  }
+  return _adapter;
+}
+>>>>>>> af844c5e09a269b932b69dd1fb727feaad8b6e80
 
 const app = new Hono();
 
@@ -211,7 +228,7 @@ if (process.env.AUTH_SECRET) {
               }
 
               // logic to verify if user exists
-              const user = await adapter.getUserByEmail(email);
+              const user = await getAdapter().getUserByEmail(email);
               if (!user) {
                 return null;
               }
@@ -263,11 +280,11 @@ if (process.env.AUTH_SECRET) {
 
                 // logic to verify if user exists
                 console.log('[Signup] Checking if user already exists:', email);
-                const user = await adapter.getUserByEmail(email);
+                const user = await getAdapter().getUserByEmail(email);
 
                 if (!user) {
                   console.log('[Signup] Creating new user record for:', email);
-                  const newUser = await adapter.createUser({
+                  const newUser = await getAdapter().createUser({
                     id: crypto.randomUUID(),
                     emailVerified: null,
                     email,
@@ -276,7 +293,7 @@ if (process.env.AUTH_SECRET) {
                   });
 
                   console.log('[Signup] Linking credentials account for userId:', newUser.id);
-                  await adapter.linkAccount({
+                  await getAdapter().linkAccount({
                     extraData: {
                       password: await hash(password),
                     },

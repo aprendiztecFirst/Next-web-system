@@ -13,17 +13,42 @@ export async function GET(request) {
     try {
       const { searchParams } = new URL(request.url);
       const activeOnly = searchParams.get("active") === "true";
+      const level = searchParams.get("level");
+      const classId = searchParams.get("class_id");
 
-      const query = sql`
-        SELECT id, full_name, email, phone, birth_date, address, active, enrollment_date, notes
-        FROM students
-        ${activeOnly ? sql`WHERE active = true` : sql``}
-        ORDER BY full_name ASC
-      `;
+      let query;
+      if (level) {
+        query = sql`
+          SELECT s.* 
+          FROM students s
+          JOIN class_enrollments ce ON s.id = ce.student_id
+          JOIN classes c ON ce.class_id = c.id
+          WHERE c.level = ${level}
+          ${activeOnly ? sql`AND s.active = true` : sql``}
+          ORDER BY s.full_name ASC
+        `;
+      } else if (classId) {
+        query = sql`
+          SELECT s.* 
+          FROM students s
+          JOIN class_enrollments ce ON s.id = ce.student_id
+          WHERE ce.class_id = ${classId}
+          ${activeOnly ? sql`AND s.active = true` : sql``}
+          ORDER BY s.full_name ASC
+        `;
+      } else {
+        query = sql`
+          SELECT id, full_name, email, phone, birth_date, address, active, enrollment_date, notes
+          FROM students
+          ${activeOnly ? sql`WHERE active = true` : sql``}
+          ORDER BY full_name ASC
+        `;
+      }
+
       const students = await query;
       return Response.json({ students });
     } catch (dbError) {
-      console.warn("⚠️ [GET /api/students] Database unavailable, using MOCK data.");
+      console.warn("⚠️ [GET /api/students] Database unavailable, using MOCK data.", dbError.message);
       return Response.json({ students: MOCK_STUDENTS });
     }
   } catch (err) {

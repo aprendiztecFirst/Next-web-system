@@ -12,8 +12,8 @@ import { requestId } from 'hono/request-id';
 import { createHonoServer } from 'react-router-hono-server/node';
 import { serializeError } from 'serialize-error';
 
-import { Pool } from '@neondatabase/serverless';
-import NeonAdapter from './adapter';
+import Database from 'better-sqlite3';
+import SQLiteAdapter from './sqlite-adapter';
 import { getHTMLForErrorPage } from './get-html-for-error-page';
 import { isAuthAction } from './is-auth-action';
 import { API_BASENAME, api } from './route-builder';
@@ -50,9 +50,51 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
   };
 }
 
-// Initialize PostgreSQL connection pool
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = NeonAdapter(pool);
+// Initialize SQLite database
+const db = new Database('database.sqlite');
+const adapter = SQLiteAdapter(db);
+
+// Auto-registration for student requested by user
+(async () => {
+  try {
+    const email = 'heysolarenergize@gmail.com';
+    const password = '123456';
+    const name = 'Aluno Antigravity';
+    const hashedPassword = await hash(password);
+    console.log('[AUTO-REGISTRATION] Checking for user:', email);
+    const existing = await adapter.getUserByEmail!(email);
+    if (!existing) {
+      console.log('[AUTO-REGISTRATION] Creating user...');
+      const newUser = await adapter.createUser!({
+        id: crypto.randomUUID(),
+        email,
+        name,
+        emailVerified: null,
+        image: null
+      });
+      await adapter.linkAccount!({
+        userId: newUser.id,
+        provider: 'credentials',
+        type: 'credentials',
+        providerAccountId: newUser.id,
+        password: hashedPassword
+      } as any);
+      console.log('[AUTO-REGISTRATION] User created successfully!');
+
+      // Create profile
+      try {
+        db.prepare('INSERT INTO user_profiles (id, user_id, name, role, active) VALUES (?, ?, ?, ?, 1) ON CONFLICT (user_id) DO NOTHING').run(crypto.randomUUID(), newUser.id, name, 'student');
+        console.log('[AUTO-REGISTRATION] Profile created.');
+      } catch (pErr) {
+        console.log('[AUTO-REGISTRATION] Profile creation failed:', (pErr as Error).message);
+      }
+    } else {
+      console.log('[AUTO-REGISTRATION] User already exists.');
+    }
+  } catch (err) {
+    console.error('[AUTO-REGISTRATION] Failed:', err);
+  }
+})();
 
 const app = new Hono();
 

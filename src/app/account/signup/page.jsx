@@ -55,10 +55,7 @@ export default function SignUpPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">Next Idiomas</span>
+              <img src="/logo.jpg" alt="Next Idiomas" className="h-8 w-auto rounded-lg" />
             </div>
             <div className="flex items-center gap-1">
               {navTabs.map((tab) => {
@@ -89,9 +86,9 @@ export default function SignUpPage() {
           onSubmit={onSubmit}
           className="w-full max-w-md bg-white dark:bg-[#262626] rounded-2xl shadow-xl dark:shadow-none dark:ring-1 dark:ring-gray-700 p-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center font-jetbrains-mono">
-            Next Idiomas
-          </h1>
+          <div className="flex justify-center mb-6">
+            <img src="/logo.jpg" alt="Next Idiomas" className="h-16 w-auto rounded-xl ring-4 ring-blue-50/50" />
+          </div>
           <p className="text-gray-600 dark:text-gray-400 text-center mb-8 font-jetbrains-mono">
             Crie sua conta
           </p>

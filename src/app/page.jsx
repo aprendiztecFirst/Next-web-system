@@ -80,10 +80,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Next Idiomas</span>
+              <img src="/logo.jpg" alt="Next Idiomas" className="h-10 w-auto rounded-lg shadow-sm" />
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <a href="#" className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors">Início</a>

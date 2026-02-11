@@ -19,8 +19,8 @@ export default function Header() {
           href="/"
           className="flex items-center space-x-2 text-xl sm:text-2xl font-bold font-jetbrains-mono"
         >
-          <span className="text-2xl">🎓</span>
-          <span>Next Idiomas</span>
+          <img src="/logo.jpg" alt="Logo Next Idiomas" className="h-10 w-auto rounded-lg" />
+          <span className="sr-only">Next Idiomas</span>
         </a>
 
         {/* Desktop Navigation */}

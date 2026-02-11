@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "@/components/Header";
+import SecretaryNav from "@/components/SecretaryNav";
 import useUser from "@/utils/useUser";
 
 export default function NewStudentPage() {
@@ -80,8 +81,9 @@ export default function NewStudentPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#1E1E1E]">
       <Header />
+      <SecretaryNav currentPath="/secretary/new-student" />
 
-      <main className="pt-24 pb-16 px-4">
+      <main className="pt-8 pb-16 px-4">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-8 font-jetbrains-mono">
             Cadastro de Alunos

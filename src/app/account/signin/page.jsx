@@ -64,10 +64,7 @@ export default function SignInPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">Next Idiomas</span>
+              <img src="/logo.jpg" alt="Next Idiomas" className="h-8 w-auto rounded-lg" />
             </div>
             <div className="flex items-center gap-1">
               {navTabs.map((tab) => {
@@ -100,9 +97,7 @@ export default function SignInPage() {
         >
           {/* Icon */}
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
-              <GraduationCap className="w-8 h-8 text-white" strokeWidth={2} />
-            </div>
+            <img src="/logo.jpg" alt="Next Idiomas" className="h-20 w-auto rounded-xl ring-4 ring-blue-50/50 shadow-lg" />
           </div>
 
           {/* Title */}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import SecretaryNav from "@/components/SecretaryNav";
 import useUser from "@/utils/useUser";
 import { Search, UserPlus } from "lucide-react";
 
@@ -8,14 +9,24 @@ export default function StudentsPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [currentLevel, setCurrentLevel] = useState(null);
 
   useEffect(() => {
-    fetchStudents();
+    const params = new URLSearchParams(window.location.search);
+    const level = params.get("level");
+    setCurrentLevel(level);
+    fetchStudents(level);
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (level) => {
     try {
-      const res = await fetch("/api/students");
+      setLoading(true);
+      let url = "/api/students";
+      if (level) {
+        url += `?level=${encodeURIComponent(level)}`;
+      }
+
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Erro ao carregar alunos");
       const data = await res.json();
       setStudents(data.students || []);
@@ -52,12 +63,13 @@ export default function StudentsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#1E1E1E]">
       <Header />
+      <SecretaryNav currentPath="/secretary/students" />
 
-      <main className="pt-24 pb-16 px-4">
+      <main className="pt-8 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 font-jetbrains-mono">
-              Alunos
+              Alunos {currentLevel ? `- ${currentLevel}` : ""}
             </h1>
             <a
               href="/secretary/new-student"
@@ -141,11 +153,10 @@ export default function StudentsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`px-3 py-1 rounded-full text-sm font-jetbrains-mono ${
-                              student.active
-                                ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-sm font-jetbrains-mono ${student.active
+                              ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
+                              }`}
                           >
                             {student.active ? "Ativo" : "Inativo"}
                           </span>

@@ -63,9 +63,14 @@ export default function SignInPage() {
       <nav className="bg-white dark:bg-[#262626] border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Next Idiomas" className="h-8 w-auto rounded-lg" />
-            </div>
+            <Link to="/" className="flex flex-col items-start px-2">
+              <div className="flex items-center">
+                <img src="/logo.png" alt="Next Idiomas" className="h-10 w-auto object-contain mix-blend-multiply" />
+              </div>
+              <span className="text-[7px] font-medium text-gray-400 tracking-tighter uppercase leading-none mt-1">
+                A MENOR DISTÂNCIA ENTRE VOCÊ E O MUNDO
+              </span>
+            </Link>
             <div className="flex items-center gap-1">
               {navTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -96,8 +101,11 @@ export default function SignInPage() {
           className="w-full max-w-md bg-white dark:bg-[#262626] rounded-2xl shadow-lg dark:shadow-none dark:ring-1 dark:ring-gray-700 p-8 mb-6"
         >
           {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <img src="/logo.jpg" alt="Next Idiomas" className="h-20 w-auto rounded-xl ring-4 ring-blue-50/50 shadow-lg" />
+          <div className="flex flex-col items-center mb-6">
+            <img src="/logo.png" alt="Next Idiomas" className="h-16 w-auto object-contain mix-blend-multiply" />
+            <span className="text-[10px] font-bold text-blue-600 tracking-widest uppercase mt-3 text-center leading-none">
+              A MENOR DISTÂNCIA ENTRE VOCÊ E O MUNDO
+            </span>
           </div>
 
           {/* Title */}

@@ -79,9 +79,14 @@ export default function HomePage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Next Idiomas" className="h-10 w-auto rounded-lg shadow-sm" />
-            </div>
+            <a href="/" className="flex flex-col items-start">
+              <div className="flex items-center">
+                <img src="/logo.png" alt="Next Idiomas" className="h-12 w-auto object-contain mix-blend-multiply" />
+              </div>
+              <span className="text-[9px] font-medium text-gray-500 tracking-[0.15em] uppercase mt-1 leading-none">
+                A MENOR DISTÂNCIA ENTRE VOCÊ E O MUNDO
+              </span>
+            </a>
             <nav className="hidden md:flex items-center gap-6">
               <a href="#" className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors">Início</a>
               <a href="/account/signin" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Login</a>

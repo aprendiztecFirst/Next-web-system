@@ -1,0 +1,28 @@
+Na guia PORTAL DO ALUNO na guia Minhas Turmas, transforme-o em um menu dropdown com as opções de turmas disponíveis: iLearn 01, iLearn 02, iLearn 03, Top Notch Fundamentals A, Top Notch Fundamentals B, Top Notch 1A, Top Notch 1B, Top Notch 2A, Top Notch 2B, Top Notch 3A, Top Notch 3B.
+
+Na guia PORTAL DO ALUNO na guia Horários lance o seguinte horário:
+Segunda e Quarta
+Turmas:
+14:15 - TN 2A /  iLearn 2
+
+15:30 - TN 3B / iLearn 3
+
+17:00 - TN 3A
+
+19:00 -  VIP: alciene / TN 1A
+
+20:00 - TN 2B
+
+Terça e Quinta
+Turmas:
+14:15 -  iLearn 1 / VIP: Patrícia
+
+15:30 - TN 2B / TN 1B
+
+17:00 - VIP: Guilherme
+
+19:00 -  Fundamentals B
+
+20:00 - VIP: Marcos
+
+Na guia MATERIAIS, crie um link que leve para a plataforma da Pearson: https://login.pearson.com/v1/piapi/piui/signin?client_id=bWPoUiRnLpUhX2rhGeP4AaLCeyQYNYDA&login_success_url=https:%2F%2Fenglish-dashboard.pearson.com%2Flogin%3FiesCode%3DS3csGhKKxv

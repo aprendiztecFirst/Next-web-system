@@ -12,40 +12,82 @@ export async function GET(request) {
   try {
     try {
       const { searchParams } = new URL(request.url);
-      const activeOnly = searchParams.get("active") === "true";
+      const status = searchParams.get("status") || "all";
       const level = searchParams.get("level");
       const classId = searchParams.get("class_id");
 
-      let query;
-      if (level) {
-        query = sql`
-          SELECT s.* 
-          FROM students s
-          JOIN class_enrollments ce ON s.id = ce.student_id
-          JOIN classes c ON ce.class_id = c.id
-          WHERE c.level = ${level}
-          ${activeOnly ? sql`AND s.active = true` : sql``}
-          ORDER BY s.full_name ASC
-        `;
-      } else if (classId) {
-        query = sql`
-          SELECT s.* 
-          FROM students s
-          JOIN class_enrollments ce ON s.id = ce.student_id
-          WHERE ce.class_id = ${classId}
-          ${activeOnly ? sql`AND s.active = true` : sql``}
-          ORDER BY s.full_name ASC
-        `;
-      } else {
-        query = sql`
-          SELECT id, full_name, email, phone, birth_date, address, active, enrollment_date, notes
-          FROM students
-          ${activeOnly ? sql`WHERE active = true` : sql``}
-          ORDER BY full_name ASC
-        `;
-      }
+      let students;
 
-      const students = await query;
+      if (level) {
+        if (status === "active") {
+          students = await sql`
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            JOIN classes c ON ce.class_id = c.id
+            WHERE c.level = ${level} AND s.active = 1
+            ORDER BY s.full_name ASC
+          `;
+        } else if (status === "inactive") {
+          students = await sql`
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            JOIN classes c ON ce.class_id = c.id
+            WHERE c.level = ${level} AND s.active = 0
+            ORDER BY s.full_name ASC
+          `;
+        } else {
+          students = await sql`
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            JOIN classes c ON ce.class_id = c.id
+            WHERE c.level = ${level}
+            ORDER BY s.full_name ASC
+          `;
+        }
+      } else if (classId) {
+        if (status === "active") {
+          students = await sql`
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            WHERE ce.class_id = ${classId} AND s.active = 1
+            ORDER BY s.full_name ASC
+          `;
+        } else if (status === "inactive") {
+          students = await sql`
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            WHERE ce.class_id = ${classId} AND s.active = 0
+            ORDER BY s.full_name ASC
+          `;
+        } else {
+          students = await sql`
+            SELECT s.* FROM students s
+            JOIN class_enrollments ce ON s.id = ce.student_id
+            WHERE ce.class_id = ${classId}
+            ORDER BY s.full_name ASC
+          `;
+        }
+      } else {
+        if (status === "active") {
+          students = await sql`
+            SELECT id, full_name, email, phone, birth_date, address, active, enrollment_date, notes
+            FROM students WHERE active = 1
+            ORDER BY full_name ASC
+          `;
+        } else if (status === "inactive") {
+          students = await sql`
+            SELECT id, full_name, email, phone, birth_date, address, active, enrollment_date, notes
+            FROM students WHERE active = 0
+            ORDER BY full_name ASC
+          `;
+        } else {
+          students = await sql`
+            SELECT id, full_name, email, phone, birth_date, address, active, enrollment_date, notes
+            FROM students
+            ORDER BY full_name ASC
+          `;
+        }
+      }
       return Response.json({ students });
     } catch (dbError) {
       console.warn("⚠️ [GET /api/students] Database unavailable, using MOCK data.", dbError.message);
@@ -62,8 +104,8 @@ export async function POST(request) {
 
     try {
       const result = await sql`
-        INSERT INTO students (full_name, email, phone, birth_date, address, notes, active)
-        VALUES (${body.full_name}, ${body.email}, ${body.phone}, ${body.birth_date}, ${body.address}, ${body.notes}, true)
+        INSERT INTO students (full_name, email, phone, birth_date, address, parent_name, cpf, rg, specific_needs, notes, active)
+        VALUES (${body.full_name}, ${body.email}, ${body.phone}, ${body.birth_date}, ${body.address}, ${body.parent_name}, ${body.cpf}, ${body.rg}, ${body.specific_needs}, ${body.notes}, true)
         RETURNING *
       `;
       return Response.json({ student: result[0] });

@@ -6,6 +6,7 @@ export default function SecretaryNav({ currentPath }) {
 
     const navItems = [
         { name: "Alunos", href: "/secretary/students", icon: Users },
+        { name: "Professores", href: "/secretary/teachers", icon: Users },
         {
             name: "Turmas",
             href: "/secretary/classes",

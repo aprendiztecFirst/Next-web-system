@@ -50,10 +50,13 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
   };
 }
 
-<<<<<<< HEAD
 // Initialize SQLite database
 const db = new Database('database.sqlite');
 const adapter = SQLiteAdapter(db);
+
+function getAdapter() {
+  return adapter;
+}
 
 // Auto-registration for student requested by user
 (async () => {
@@ -96,22 +99,6 @@ const adapter = SQLiteAdapter(db);
     console.error('[AUTO-REGISTRATION] Failed:', err);
   }
 })();
-=======
-// Initialize PostgreSQL connection pool
-// Initialize PostgreSQL connection pool lazily
-let _pool: Pool | null = null;
-let _adapter: ReturnType<typeof NeonAdapter> | null = null;
-
-function getAdapter() {
-  if (!_adapter) {
-    if (!_pool) {
-      _pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    }
-    _adapter = NeonAdapter(_pool);
-  }
-  return _adapter;
-}
->>>>>>> af844c5e09a269b932b69dd1fb727feaad8b6e80
 
 const app = new Hono();
 

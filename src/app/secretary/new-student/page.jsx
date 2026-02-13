@@ -15,6 +15,10 @@ export default function NewStudentPage() {
     phone: "",
     birth_date: "",
     address: "",
+    parent_name: "",
+    cpf: "",
+    rg: "",
+    specific_needs: "NÃO",
     notes: "",
   });
 
@@ -47,6 +51,10 @@ export default function NewStudentPage() {
         phone: "",
         birth_date: "",
         address: "",
+        parent_name: "",
+        cpf: "",
+        rg: "",
+        specific_needs: "NÃO",
         notes: "",
       });
 
@@ -110,6 +118,47 @@ export default function NewStudentPage() {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
+                  Nome da Mãe ou Pai
+                </label>
+                <input
+                  type="text"
+                  name="parent_name"
+                  value={formData.parent_name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 font-jetbrains-mono"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
+                    CPF
+                  </label>
+                  <input
+                    type="text"
+                    name="cpf"
+                    value={formData.cpf}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 font-jetbrains-mono"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
+                    RG
+                  </label>
+                  <input
+                    type="text"
+                    name="rg"
+                    value={formData.rg}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 font-jetbrains-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
                   Email *
                 </label>
                 <input
@@ -148,6 +197,21 @@ export default function NewStudentPage() {
                     className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 font-jetbrains-mono"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
+                  O aluno tem alguma necessidade específica?
+                </label>
+                <select
+                  name="specific_needs"
+                  value={formData.specific_needs}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 font-jetbrains-mono"
+                >
+                  <option value="SIM">SIM</option>
+                  <option value="NÃO">NÃO</option>
+                </select>
               </div>
 
               <div className="space-y-2">

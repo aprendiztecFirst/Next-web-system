@@ -17,10 +17,15 @@ export default function Header() {
         {/* Logo */}
         <a
           href="/"
-          className="flex items-center space-x-2 text-xl sm:text-2xl font-bold font-jetbrains-mono"
+          className="flex flex-col items-start space-y-0 font-jetbrains-mono"
         >
-          <img src="/logo.jpg" alt="Logo Next Idiomas" className="h-10 w-auto rounded-lg" />
-          <span className="sr-only">Next Idiomas</span>
+          <div className="flex items-center">
+            <img src="/logo.png" alt="Logo Next Idiomas" className="h-12 w-auto object-contain mix-blend-multiply" />
+            <span className="sr-only">Next Idiomas</span>
+          </div>
+          <span className="text-[9px] sm:text-[10px] font-medium text-white/90 tracking-[0.2em] uppercase leading-none mt-1">
+            A MENOR DISTÂNCIA ENTRE VOCÊ E O MUNDO
+          </span>
         </a>
 
         {/* Desktop Navigation */}

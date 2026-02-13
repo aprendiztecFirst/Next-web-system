@@ -1,6 +1,10 @@
 import Database from 'better-sqlite3';
+import crypto from 'node:crypto';
+import path from 'node:path';
 
-const db = new Database('database.sqlite');
+// Use absolute path for DB to avoid issues in different environments
+const DB_PATH = path.join(process.cwd(), 'database.sqlite');
+const db = new Database(DB_PATH);
 
 function sql(strings, ...values) {
   let query = strings.join('?');
@@ -8,33 +12,37 @@ function sql(strings, ...values) {
   const isSelect = query.trim().toUpperCase().startsWith('SELECT');
   const hasReturning = query.toUpperCase().includes('RETURNING');
 
-  // If it's an insert and missing ID column, inject one
+  const finalValues = values.map(v => v === true ? 1 : v === false ? 0 : v);
+
+  // If it's an insert and missing ID column, inject one using a placeholder
   if (isInsert && !query.toLowerCase().includes('(id,') && !query.toLowerCase().includes(' id,')) {
-    // Matches "INSERT INTO table_name ("
     const insertMatch = query.match(/INSERT INTO (\w+)\s*\(/i);
     if (insertMatch) {
       const tableName = insertMatch[1];
-      // Only inject if it's one of our tables that usually uses UUIDs
-      const authTables = ['auth_users', 'auth_accounts', 'auth_sessions', 'user_profiles', 'students', 'classes', 'pre_enrollments'];
-      if (authTables.includes(tableName.toLowerCase())) {
+      const targetTables = ['auth_users', 'auth_accounts', 'auth_sessions', 'user_profiles', 'students', 'classes', 'pre_enrollments', 'teachers'];
+      if (targetTables.includes(tableName.toLowerCase())) {
         query = query.replace(/INSERT INTO (\w+)\s*\(/i, 'INSERT INTO $1 (id, ');
-        query = query.replace(/VALUES\s*\(/i, `VALUES ('${crypto.randomUUID()}', `);
+        query = query.replace(/VALUES\s*\(/i, `VALUES (?, `);
+        finalValues.unshift(crypto.randomUUID());
       }
     }
   }
 
-  // Basic boolean handling for SQLite
-  const finalValues = values.map(v => v === true ? 1 : v === false ? 0 : v);
+  try {
+    const stmt = db.prepare(query);
 
-  const stmt = db.prepare(query);
-
-  if (isSelect) {
-    return stmt.all(...finalValues);
-  } else if (hasReturning) {
-    return stmt.all(...finalValues);
-  } else {
-    const result = stmt.run(...finalValues);
-    return result;
+    if (isSelect) {
+      return stmt.all(...finalValues);
+    } else if (hasReturning) {
+      return stmt.all(...finalValues);
+    } else {
+      return stmt.run(...finalValues);
+    }
+  } catch (err) {
+    console.error(`❌ [SQL ERROR] Query: ${query}`);
+    console.error(`❌ [SQL ERROR] Values:`, finalValues);
+    console.error(`❌ [SQL ERROR] Message: ${err.message}`);
+    throw err;
   }
 }
 

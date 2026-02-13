@@ -13,6 +13,10 @@ function setup() {
             phone TEXT,
             birth_date TEXT,
             address TEXT,
+            parent_name TEXT,
+            cpf TEXT,
+            rg TEXT,
+            specific_needs TEXT,
             active INTEGER DEFAULT 1,
             enrollment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
             notes TEXT

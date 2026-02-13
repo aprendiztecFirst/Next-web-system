@@ -17,14 +17,23 @@ export async function GET(request) {
       const { searchParams } = new URL(request.url);
       const activeOnly = searchParams.get("active") === "true";
 
-      const query = sql`
-        SELECT c.*, up.name as teacher_name
-        FROM classes c
-        LEFT JOIN user_profiles up ON c.teacher_id = up.id
-        ${activeOnly ? sql`WHERE c.active = true` : sql``}
-        ORDER BY c.name ASC
-      `;
-      const classes = await query;
+      let classes;
+      if (activeOnly) {
+        classes = await sql`
+          SELECT c.*, t.full_name as teacher_name
+          FROM classes c
+          LEFT JOIN teachers t ON c.teacher_id = t.id
+          WHERE c.active = 1
+          ORDER BY c.name ASC
+        `;
+      } else {
+        classes = await sql`
+          SELECT c.*, t.full_name as teacher_name
+          FROM classes c
+          LEFT JOIN teachers t ON c.teacher_id = t.id
+          ORDER BY c.name ASC
+        `;
+      }
       return Response.json({ classes });
     } catch (dbError) {
       console.warn("⚠️ [GET /api/classes] Database unavailable, using MOCK data.");

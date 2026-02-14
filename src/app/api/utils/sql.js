@@ -19,7 +19,7 @@ function sql(strings, ...values) {
     const insertMatch = query.match(/INSERT INTO (\w+)\s*\(/i);
     if (insertMatch) {
       const tableName = insertMatch[1];
-      const targetTables = ['auth_users', 'auth_accounts', 'auth_sessions', 'user_profiles', 'students', 'classes', 'pre_enrollments', 'teachers'];
+      const targetTables = ['auth_users', 'auth_accounts', 'auth_sessions', 'user_profiles', 'students', 'classes', 'pre_enrollments', 'teachers', 'class_enrollments'];
       if (targetTables.includes(tableName.toLowerCase())) {
         query = query.replace(/INSERT INTO (\w+)\s*\(/i, 'INSERT INTO $1 (id, ');
         query = query.replace(/VALUES\s*\(/i, `VALUES (?, `);

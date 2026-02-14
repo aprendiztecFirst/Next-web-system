@@ -9,6 +9,7 @@ export default function EditTeacherPage() {
     const { data: user, loading: userLoading } = useUser();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [fetchingClasses, setFetchingClasses] = useState(true);
     const [classes, setClasses] = useState([]);
     const [error, setError] = useState(null);
@@ -115,6 +116,37 @@ export default function EditTeacherPage() {
         }
     };
 
+    const handleDelete = async () => {
+        if (!window.confirm("Tem certeza que deseja excluir este professor? Esta ação não pode ser desfeita.")) {
+            return;
+        }
+
+        setError(null);
+        setSuccess(false);
+        setDeleting(true);
+
+        try {
+            const res = await fetch(`/api/teachers/${id}`, {
+                method: "DELETE",
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Erro ao excluir professor");
+            }
+
+            setSuccess(true);
+            setTimeout(() => {
+                window.location.href = "/secretary/teachers";
+            }, 2000);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     if (userLoading || loading) return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#1E1E1E] flex items-center justify-center">
             <p className="text-gray-600 dark:text-gray-400 font-jetbrains-mono">Carregando...</p>
@@ -208,8 +240,8 @@ export default function EditTeacherPage() {
                                                 key={cls.id}
                                                 onClick={() => handleClassToggle(cls.id)}
                                                 className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${formData.classIds.includes(cls.id)
-                                                        ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                                        : "bg-white dark:bg-[#262626] border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-400"
+                                                    ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                                                    : "bg-white dark:bg-[#262626] border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-blue-400"
                                                     }`}
                                             >
                                                 <div className="flex-1">
@@ -239,17 +271,25 @@ export default function EditTeacherPage() {
                             </div>
                         )}
 
-                        <div className="flex space-x-4">
+                        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                             <button
                                 type="submit"
-                                disabled={saving}
+                                disabled={saving || deleting}
                                 className="flex-1 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 font-jetbrains-mono"
                             >
                                 {saving ? "Salvando..." : "Salvar Alterações"}
                             </button>
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                disabled={saving || deleting}
+                                className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 font-jetbrains-mono"
+                            >
+                                {deleting ? "Excluindo..." : "Excluir Professor"}
+                            </button>
                             <a
                                 href="/secretary/teachers"
-                                className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-jetbrains-mono"
+                                className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-jetbrains-mono text-center"
                             >
                                 Cancelar
                             </a>

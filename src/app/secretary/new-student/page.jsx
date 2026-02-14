@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import SecretaryNav from "@/components/SecretaryNav";
 import useUser from "@/utils/useUser";
@@ -6,6 +6,8 @@ import useUser from "@/utils/useUser";
 export default function NewStudentPage() {
   const { data: user, loading: userLoading } = useUser();
   const [loading, setLoading] = useState(false);
+  const [fetchingClasses, setFetchingClasses] = useState(true);
+  const [classes, setClasses] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
@@ -20,12 +22,43 @@ export default function NewStudentPage() {
     rg: "",
     specific_needs: "NÃO",
     notes: "",
+    classIds: [],
   });
 
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
+  const fetchClasses = async () => {
+    try {
+      setFetchingClasses(true);
+      const res = await fetch("/api/classes");
+      if (!res.ok) throw new Error("Erro ao carregar turmas");
+      const data = await res.json();
+      setClasses(data.classes || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingClasses(false);
+    }
+  };
+
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === 'checkbox' ? checked : value,
+    });
+  };
+
+  const handleClassToggle = (classId) => {
+    setFormData((prev) => {
+      const isSelected = prev.classIds.includes(classId);
+      if (isSelected) {
+        return { ...prev, classIds: prev.classIds.filter(id => id !== classId) };
+      } else {
+        return { ...prev, classIds: [...prev.classIds, classId] };
+      }
     });
   };
 
@@ -56,6 +89,7 @@ export default function NewStudentPage() {
         rg: "",
         specific_needs: "NÃO",
         notes: "",
+        classIds: [],
       });
 
       setTimeout(() => {
@@ -238,6 +272,37 @@ export default function NewStudentPage() {
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500 font-jetbrains-mono"
                 />
+              </div>
+
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
+                  Matricular em Turmas
+                </label>
+                {fetchingClasses ? (
+                  <p className="text-gray-500 text-sm">Carregando turmas...</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800">
+                    {classes.map((cls) => (
+                      <div
+                        key={cls.id}
+                        onClick={() => handleClassToggle(cls.id)}
+                        className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${formData.classIds.includes(cls.id)
+                          ? "bg-orange-600 border-orange-600 text-white shadow-md"
+                          : "bg-white dark:bg-[#262626] border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-orange-400"
+                          }`}
+                      >
+                        <div className="flex-1">
+                          <p className={`font-bold text-sm ${formData.classIds.includes(cls.id) ? "text-white" : ""}`}>
+                            {cls.name}
+                          </p>
+                          <p className={`text-xs ${formData.classIds.includes(cls.id) ? "text-orange-100" : "text-gray-500"}`}>
+                            {cls.level} - {cls.language}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {error && (

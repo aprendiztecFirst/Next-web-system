@@ -9,6 +9,9 @@ export default function EditStudentPage() {
     const { data: user, loading: userLoading } = useUser();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [fetchingClasses, setFetchingClasses] = useState(true);
+    const [classes, setClasses] = useState([]);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
 
@@ -23,7 +26,8 @@ export default function EditStudentPage() {
         rg: "",
         specific_needs: "NÃO",
         notes: "",
-        active: true
+        active: true,
+        classIds: []
     });
 
     useEffect(() => {
@@ -35,10 +39,21 @@ export default function EditStudentPage() {
     const fetchStudent = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/students/${id}`);
-            if (!res.ok) throw new Error("Erro ao carregar dados do aluno");
-            const data = await res.json();
-            const student = data.student;
+            setFetchingClasses(true);
+
+            const [studentRes, classesRes] = await Promise.all([
+                fetch(`/api/students/${id}`),
+                fetch("/api/classes")
+            ]);
+
+            if (!studentRes.ok) throw new Error("Erro ao carregar dados do aluno");
+            if (!classesRes.ok) throw new Error("Erro ao carregar turmas");
+
+            const studentData = await studentRes.json();
+            const classesData = await classesRes.json();
+
+            const student = studentData.student;
+            const classIds = studentData.classIds || [];
 
             setFormData({
                 full_name: student.full_name || "",
@@ -51,14 +66,29 @@ export default function EditStudentPage() {
                 rg: student.rg || "",
                 specific_needs: student.specific_needs || "NÃO",
                 notes: student.notes || "",
-                active: student.active === 1 || student.active === true
+                active: student.active === 1 || student.active === true,
+                classIds: classIds
             });
+
+            setClasses(classesData.classes || []);
         } catch (err) {
             console.error(err);
             setError("Erro ao carregar dados do aluno.");
         } finally {
             setLoading(false);
+            setFetchingClasses(false);
         }
+    };
+
+    const handleClassToggle = (classId) => {
+        setFormData((prev) => {
+            const isSelected = prev.classIds.includes(classId);
+            if (isSelected) {
+                return { ...prev, classIds: prev.classIds.filter(id => id !== classId) };
+            } else {
+                return { ...prev, classIds: [...prev.classIds, classId] };
+            }
+        });
     };
 
     const handleChange = (e) => {
@@ -93,6 +123,37 @@ export default function EditStudentPage() {
             setError("Erro ao atualizar aluno. Tente novamente.");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm("Tem certeza que deseja excluir este aluno? Esta ação não pode ser desfeita.")) {
+            return;
+        }
+
+        setError(null);
+        setSuccess(false);
+        setDeleting(true);
+
+        try {
+            const res = await fetch(`/api/students/${id}`, {
+                method: "DELETE",
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Erro ao excluir aluno");
+            }
+
+            setSuccess(true);
+            setTimeout(() => {
+                window.location.href = "/secretary/students";
+            }, 2000);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -267,6 +328,37 @@ export default function EditStudentPage() {
                                 />
                             </div>
 
+                            <div className="space-y-4">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 font-jetbrains-mono">
+                                    Turmas Matriculadas
+                                </label>
+                                {fetchingClasses ? (
+                                    <p className="text-gray-500 text-sm">Carregando turmas...</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-[#1E1E1E]">
+                                        {classes.map((cls) => (
+                                            <div
+                                                key={cls.id}
+                                                onClick={() => handleClassToggle(cls.id)}
+                                                className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${formData.classIds.includes(cls.id)
+                                                    ? "bg-orange-600 border-orange-600 text-white shadow-md"
+                                                    : "bg-white dark:bg-[#262626] border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-orange-400"
+                                                    }`}
+                                            >
+                                                <div className="flex-1">
+                                                    <p className={`font-bold text-sm ${formData.classIds.includes(cls.id) ? "text-white" : ""}`}>
+                                                        {cls.name}
+                                                    </p>
+                                                    <p className={`text-xs ${formData.classIds.includes(cls.id) ? "text-orange-100" : "text-gray-500"}`}>
+                                                        {cls.level} - {cls.language}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="flex items-center space-x-2">
                                 <input
                                     type="checkbox"
@@ -293,17 +385,25 @@ export default function EditStudentPage() {
                                 </div>
                             )}
 
-                            <div className="flex space-x-4">
+                            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                                 <button
                                     type="submit"
-                                    disabled={saving}
+                                    disabled={saving || deleting}
                                     className="flex-1 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 font-jetbrains-mono"
                                 >
                                     {saving ? "Salvando..." : "Salvar Alterações"}
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDelete}
+                                    disabled={saving || deleting}
+                                    className="px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 font-jetbrains-mono"
+                                >
+                                    {deleting ? "Excluindo..." : "Excluir Aluno"}
+                                </button>
                                 <a
                                     href="/secretary/students"
-                                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-jetbrains-mono"
+                                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-jetbrains-mono text-center"
                                 >
                                     Cancelar
                                 </a>

@@ -1,4 +1,5 @@
 import sql from "@/app/api/utils/sql";
+import crypto from "node:crypto";
 import { auth } from "@/auth";
 
 // DADOS MOCK FIXOS
@@ -101,24 +102,36 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
+    const { classIds, ...studentData } = body;
 
     try {
-      const result = await sql`
-        INSERT INTO students (full_name, email, phone, birth_date, address, parent_name, cpf, rg, specific_needs, notes, active)
-        VALUES (${body.full_name}, ${body.email}, ${body.phone}, ${body.birth_date}, ${body.address}, ${body.parent_name}, ${body.cpf}, ${body.rg}, ${body.specific_needs}, ${body.notes}, true)
-        RETURNING *
-      `;
-      return Response.json({ student: result[0] });
-    } catch (dbError) {
-      console.warn("⚠️ [POST /api/students] Database unavailable, simulating success.");
-      return Response.json({
-        student: {
-          id: `temp-${Date.now()}`,
-          ...body,
-          active: true,
-          enrollment_date: new Date().toISOString()
+      const result = sql.transaction(() => {
+        // 1. Insert student
+        const studentResult = sql`
+          INSERT INTO students (full_name, email, phone, birth_date, address, parent_name, cpf, rg, specific_needs, notes, active)
+          VALUES (${studentData.full_name}, ${studentData.email}, ${studentData.phone}, ${studentData.birth_date}, ${studentData.address}, ${studentData.parent_name}, ${studentData.cpf}, ${studentData.rg}, ${studentData.specific_needs}, ${studentData.notes}, 1)
+          RETURNING *
+        `;
+        const student = studentResult[0];
+
+        // 2. Insert enrollments
+        if (classIds && classIds.length > 0) {
+          for (const classId of classIds) {
+            const enrollmentId = crypto.randomUUID();
+            sql`
+              INSERT INTO class_enrollments (id, student_id, class_id)
+              VALUES (${enrollmentId}, ${student.id}, ${classId})
+            `;
+          }
         }
+
+        return student;
       });
+
+      return Response.json({ student: result });
+    } catch (dbError) {
+      console.warn("⚠️ [POST /api/students] error:", dbError.message);
+      return Response.json({ error: "Erro ao cadastrar aluno", message: dbError.message }, { status: 500 });
     }
   } catch (err) {
     return Response.json({ error: "Erro interno" }, { status: 500 });

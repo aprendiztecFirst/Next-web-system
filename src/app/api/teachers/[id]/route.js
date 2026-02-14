@@ -72,3 +72,36 @@ export async function PUT(request, { params }) {
         return Response.json({ error: "Erro interno" }, { status: 500 });
     }
 }
+
+export async function DELETE(request, { params }) {
+    try {
+        const { id } = params;
+
+        sql.transaction(() => {
+            // 1. Clear old assignments for this teacher
+            sql`
+        UPDATE classes SET teacher_id = NULL WHERE teacher_id = ${id}
+      `;
+
+            // 2. Delete teacher
+            const result = sql`
+        DELETE FROM teachers WHERE id = ${id}
+        RETURNING *
+      `;
+
+            if (!result || result.length === 0) {
+                throw new Error("Professor não encontrado");
+            }
+
+            return result[0];
+        });
+
+        return Response.json({ success: true, message: "Professor excluído com sucesso" });
+    } catch (err) {
+        console.error("DELETE /api/teachers/[id] error:", err);
+        if (err.message === "Professor não encontrado") {
+            return Response.json({ error: err.message }, { status: 404 });
+        }
+        return Response.json({ error: "Erro interno" }, { status: 500 });
+    }
+}

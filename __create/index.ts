@@ -12,7 +12,6 @@ import { requestId } from 'hono/request-id';
 import { createHonoServer } from 'react-router-hono-server/node';
 import { serializeError } from 'serialize-error';
 
-import Database from 'better-sqlite3';
 import SQLiteAdapter from './sqlite-adapter';
 import { getHTMLForErrorPage } from './get-html-for-error-page';
 import { isAuthAction } from './is-auth-action';
@@ -50,9 +49,16 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
   };
 }
 
-// Initialize SQLite database
-const db = new Database('database.sqlite');
-const adapter = SQLiteAdapter(db);
+// Initialize SQLite database safely
+let db: any = null;
+let adapter: any = null;
+try {
+  const Database = (await import('better-sqlite3')).default;
+  db = new Database('database.sqlite');
+  adapter = SQLiteAdapter(db);
+} catch (err: any) {
+  console.warn('⚠️ [__create/index.ts] SQLite database failed to initialize:', err?.message);
+}
 
 function getAdapter() {
   return adapter;
@@ -60,6 +66,7 @@ function getAdapter() {
 
 // Auto-registration for student requested by user
 (async () => {
+  if (!adapter || !db) return;
   try {
     const email = 'heysolarenergize@gmail.com';
     const password = '123456';

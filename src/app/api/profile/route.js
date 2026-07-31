@@ -13,25 +13,29 @@ const MOCK_PROFILE = {
 
 export async function GET() {
   try {
-    try {
-      // Tenta pegar sessao, mas ignora se falhar
-      const session = await auth();
-      const userId = session?.user?.id;
-
-      const rows = await sql`
-        SELECT id, user_id, name, photo_url, role, active 
-        FROM user_profiles 
-        WHERE user_id = ${userId} 
-        LIMIT 1
-      `;
-      const profile = rows?.[0] || MOCK_PROFILE; // Fallback se não achar
-      return Response.json({ profile });
-    } catch (dbError) {
-      console.warn("⚠️ [GET /api/profile] Database unavailable, using MOCK data.");
-      return Response.json({ profile: MOCK_PROFILE });
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ profile: null, error: "Não autenticado" }, { status: 401 });
     }
+
+    const rows = await sql`
+      SELECT id, user_id, name, photo_url, role, active 
+      FROM user_profiles 
+      WHERE user_id = ${userId} 
+      LIMIT 1
+    `;
+    const profile = rows?.[0] || {
+      id: userId,
+      user_id: userId,
+      name: session.user.name || session.user.email,
+      email: session.user.email,
+      role: 'ADMIN',
+      active: true
+    };
+    return Response.json({ profile });
   } catch (err) {
-    return Response.json({ profile: MOCK_PROFILE });
+    return Response.json({ profile: null, error: err.message }, { status: 500 });
   }
 }
 

@@ -249,11 +249,12 @@ if (process.env.AUTH_SECRET) {
                 type: 'password',
               },
               name: { label: 'Name', type: 'text' },
+              role: { label: 'Role', type: 'text', required: false },
               image: { label: 'Image', type: 'text', required: false },
             },
             authorize: async (credentials) => {
               try {
-                const { email, password, name, image } = credentials;
+                const { email, password, name, role, image } = credentials;
                 console.log('[Signup] Attempting registration for:', email);
 
                 if (!email || !password) {
@@ -265,13 +266,13 @@ if (process.env.AUTH_SECRET) {
                   return null;
                 }
 
-                // logic to verify if user exists
-                console.log('[Signup] Checking if user already exists:', email);
-                const user = await getAdapter().getUserByEmail(email);
+                console.log('[Signup] Checking user record:', email);
+                let user = await getAdapter().getUserByEmail(email);
+                const hashedPassword = await hash(password);
 
                 if (!user) {
                   console.log('[Signup] Creating new user record for:', email);
-                  const newUser = await getAdapter().createUser({
+                  user = await getAdapter().createUser({
                     id: crypto.randomUUID(),
                     emailVerified: null,
                     email,
@@ -279,23 +280,38 @@ if (process.env.AUTH_SECRET) {
                     image: typeof image === 'string' && image.length > 0 ? image : undefined,
                   });
 
-                  console.log('[Signup] Linking credentials account for userId:', newUser.id);
+                  console.log('[Signup] Linking credentials account for userId:', user.id);
                   await getAdapter().linkAccount({
                     extraData: {
-                      password: await hash(password),
+                      password: hashedPassword,
                     },
                     type: 'credentials',
-                    userId: newUser.id,
-                    providerAccountId: newUser.id,
+                    userId: user.id,
+                    providerAccountId: user.id,
                     provider: 'credentials',
                   });
-
-                  console.log('[Signup] Registration successful for:', email);
-                  return newUser;
+                } else {
+                  console.log('[Signup] User exists, updating password for:', email);
+                  const updateAccountStmt = db.prepare(
+                    'INSERT INTO auth_accounts (id, userId, provider, type, providerAccountId, password) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (provider, providerAccountId) DO UPDATE SET password = ?'
+                  );
+                  updateAccountStmt.run(crypto.randomUUID(), user.id, 'credentials', 'credentials', user.id, hashedPassword, hashedPassword);
                 }
 
-                console.log('[Signup] Error: User already exists:', email);
-                return null;
+                // Create/Update user_profiles
+                try {
+                  const userRole = typeof role === 'string' && role ? role : 'student';
+                  const profileName = typeof name === 'string' && name ? name : user.name || email;
+                  db.prepare(
+                    'INSERT INTO user_profiles (id, user_id, name, role, active) VALUES (?, ?, ?, ?, 1) ON CONFLICT (user_id) DO UPDATE SET name = ?, role = ?'
+                  ).run(crypto.randomUUID(), user.id, profileName, userRole, profileName, userRole);
+                  console.log('[Signup] Profile created/updated for:', email);
+                } catch (pErr) {
+                  console.warn('[Signup] Failed to update user_profiles:', (pErr as Error).message);
+                }
+
+                console.log('[Signup] Registration successful for:', email);
+                return user;
               } catch (error) {
                 console.error("[Signup] Fatal error during authorize:", safeStringify(error));
                 throw error;

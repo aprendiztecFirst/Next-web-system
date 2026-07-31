@@ -1,26 +1,42 @@
-import * as React from 'react';
-
-
+import { useState, useEffect, useCallback } from 'react';
 
 const useUser = () => {
-  // BYPASS MODE (Modo Dev)
-  // Retorna um usuário falso para liberar o acesso ao sistema sem banco de dados
-  const mockUser = {
-    id: "dev-user-id",
-    name: "Usuário Dev (Admin)",
-    email: "dev@nextidiomas.com",
-    image: null,
-    role: "ADMIN", // Pode ser ALUNO, PROFESSOR, SECRETARIA
-  };
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSession = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/auth/session');
+      if (!res.ok) {
+        setData(null);
+        return;
+      }
+      const session = await res.json();
+      if (session && session.user) {
+        setData(session.user);
+      } else {
+        setData(null);
+      }
+    } catch (err) {
+      console.error("Erro ao verificar sessão do usuário:", err);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSession();
+  }, [fetchSession]);
 
   return {
-    user: mockUser,
-    data: mockUser,
-    loading: false,
-    refetch: () => { }
+    user: data,
+    data,
+    loading,
+    refetch: fetchSession
   };
 };
 
-export { useUser }
-
+export { useUser };
 export default useUser;

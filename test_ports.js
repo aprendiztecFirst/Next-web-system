@@ -10,6 +10,5 @@ async function checkServer(port) {
 }
 async function run() {
     await checkServer(4000);
-    await checkServer(4001);
 }
 run();

@@ -32,12 +32,20 @@ export default function SignInPage() {
     }
 
     try {
-      await signInWithCredentials({
+      const res = await signInWithCredentials({
         email,
         password,
         callbackUrl: "/dashboard",
-        redirect: true,
+        redirect: false,
       });
+
+      if (!res || res.error || res.status === 401) {
+        setError("Email ou senha incorretos. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = res.url || "/dashboard";
     } catch (err) {
       setError("Email ou senha incorretos. Tente novamente.");
       setLoading(false);

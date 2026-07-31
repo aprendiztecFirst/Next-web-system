@@ -89,10 +89,16 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         const { id } = params;
-        const result = await sql`
-      DELETE FROM students WHERE id = ${id}
-      RETURNING *
-    `;
+        const result = sql.transaction(() => {
+            // Clear enrollments first
+            sql`DELETE FROM class_enrollments WHERE student_id = ${id}`;
+            // Delete student
+            const studentResult = sql`
+              DELETE FROM students WHERE id = ${id}
+              RETURNING *
+            `;
+            return studentResult;
+        });
 
         if (!result || result.length === 0) {
             return Response.json({ error: "Aluno não encontrado" }, { status: 404 });

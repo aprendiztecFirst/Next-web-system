@@ -26,18 +26,26 @@ export default function SignUpPage() {
     }
 
     try {
-      // Store role in localStorage to use during onboarding
       localStorage.setItem("pendingRole", role);
 
-      await signUpWithCredentials({
+      const res = await signUpWithCredentials({
         email,
         password,
         name,
-        callbackUrl: "/onboarding",
-        redirect: true,
+        role,
+        callbackUrl: "/dashboard",
+        redirect: false,
       });
+
+      if (!res || res.error || res.status === 401) {
+        setError("Não foi possível concluir o cadastro. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = res.url || "/dashboard";
     } catch (err) {
-      setError("Não foi possível criar a conta. O email pode já estar em uso.");
+      setError("Não foi possível criar a conta. Tente novamente.");
       setLoading(false);
     }
   };

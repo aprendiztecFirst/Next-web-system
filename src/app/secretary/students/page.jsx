@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import SecretaryNav from "@/components/SecretaryNav";
 import useUser from "@/utils/useUser";
-import { Search, UserPlus } from "lucide-react";
+import { Search, UserPlus, Trash2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function StudentsPage() {
   const { data: user, loading: userLoading } = useUser();
@@ -11,6 +12,8 @@ export default function StudentsPage() {
   const [search, setSearch] = useState("");
   const [currentLevel, setCurrentLevel] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -37,6 +40,29 @@ export default function StudentsPage() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!studentToDelete) return;
+    try {
+      setDeleting(true);
+      const res = await fetch(`/api/students/${studentToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao excluir aluno");
+      }
+
+      setStudents((prev) => prev.filter((s) => s.id !== studentToDelete.id));
+      toast.success(`Aluno "${studentToDelete.full_name}" excluído com sucesso!`);
+      setStudentToDelete(null);
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      toast.error("Não foi possível excluir o aluno. Tente novamente.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -129,13 +155,16 @@ export default function StudentsPage() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 font-jetbrains-mono">
                       Status
                     </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100 font-jetbrains-mono">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {loading ? (
                     <tr>
                       <td
-                        colSpan="4"
+                        colSpan="5"
                         className="px-6 py-8 text-center text-gray-500 dark:text-gray-400 font-jetbrains-mono"
                       >
                         Carregando alunos...
@@ -144,7 +173,7 @@ export default function StudentsPage() {
                   ) : filteredStudents.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="4"
+                        colSpan="5"
                         className="px-6 py-8 text-center text-gray-500 dark:text-gray-400 font-jetbrains-mono"
                       >
                         Nenhum aluno encontrado
@@ -180,6 +209,16 @@ export default function StudentsPage() {
                             {student.active ? "Ativo" : "Inativo"}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setStudentToDelete(student)}
+                            title="Excluir Aluno"
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors inline-flex items-center justify-center"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -189,6 +228,56 @@ export default function StudentsPage() {
           </div>
         </div>
       </main>
+
+      {/* Confirmation Modal */}
+      {studentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-[#262626] rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-3 text-red-600 dark:text-red-400 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <AlertTriangle size={24} />
+              </div>
+              <h3 className="text-xl font-bold font-jetbrains-mono">
+                Excluir Aluno
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-300 font-jetbrains-mono text-sm mb-6">
+              Tem certeza que deseja excluir o aluno{" "}
+              <strong className="text-gray-900 dark:text-gray-100">
+                {studentToDelete.full_name}
+              </strong>
+              ? Esta ação é permanente e removerá todas as matrículas deste aluno.
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setStudentToDelete(null)}
+                disabled={deleting}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold font-jetbrains-mono transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold font-jetbrains-mono transition-colors flex items-center space-x-2 disabled:opacity-50"
+              >
+                {deleting ? (
+                  <span>Excluindo...</span>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    <span>Confirmar Exclusão</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

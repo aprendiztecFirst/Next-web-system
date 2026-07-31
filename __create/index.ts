@@ -375,7 +375,11 @@ app.route(API_BASENAME, api);
 
 export { app };
 
-export default await createHonoServer({
-  app,
-  defaultLogger: false,
-});
+if (!process.env.VERCEL) {
+  await createHonoServer({
+    app,
+    defaultLogger: false,
+  });
+}
+
+export default app;

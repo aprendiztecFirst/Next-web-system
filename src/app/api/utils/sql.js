@@ -1,12 +1,20 @@
-import Database from 'better-sqlite3';
 import crypto from 'node:crypto';
 import path from 'node:path';
 
-// Use absolute path for DB to avoid issues in different environments
-const DB_PATH = path.join(process.cwd(), 'database.sqlite');
-const db = new Database(DB_PATH);
+let db = null;
+try {
+  const Database = (await import('better-sqlite3')).default;
+  const DB_PATH = path.join(process.cwd(), 'database.sqlite');
+  db = new Database(DB_PATH);
+} catch (e) {
+  console.warn("⚠️ SQLite database unavailable in this environment:", e.message);
+}
 
 function sql(strings, ...values) {
+  if (!db) {
+    throw new Error("SQLite database is not initialized in this environment.");
+  }
+
   let query = strings.join('?');
   const isInsert = query.trim().toUpperCase().startsWith('INSERT');
   const isSelect = query.trim().toUpperCase().startsWith('SELECT');
@@ -47,6 +55,9 @@ function sql(strings, ...values) {
 }
 
 sql.transaction = (cb) => {
+  if (!db) {
+    throw new Error("SQLite database is not initialized in this environment.");
+  }
   return db.transaction(cb)();
 };
 

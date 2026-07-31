@@ -113,7 +113,9 @@ if (import.meta.env.DEV) {
 	}
 }
 const tree = buildRouteTree(__dirname);
+const apiRoute = route('api/*', './api-handler.ts');
+const integrationsRoute = route('integrations/*', './integrations-handler.ts');
 const notFound = route('*?', './__create/not-found.tsx');
-const routes = [...generateRoutes(tree), notFound];
+const routes = [apiRoute, integrationsRoute, ...generateRoutes(tree), notFound];
 
 export default routes;

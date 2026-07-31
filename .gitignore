@@ -6,4 +6,10 @@
 /build/
 
 .vercel
-.env*.local
+.env
+.env.*
+*.sqlite
+database.sqlite
+temp_node/
+.next/
+dist/

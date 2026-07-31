@@ -374,7 +374,9 @@ app.all('/integrations/:path{.+}', async (c, next) => {
 
 app.route(API_BASENAME, api);
 
-export default await createHonoServer({
-  app,
-  defaultLogger: false,
-});
+export default process.env.VERCEL
+  ? app.fetch
+  : await createHonoServer({
+      app,
+      defaultLogger: false,
+    });

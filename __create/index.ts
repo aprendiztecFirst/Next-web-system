@@ -171,19 +171,19 @@ for (const method of ['post', 'put', 'patch'] as const) {
   );
 }
 
-if (process.env.AUTH_SECRET) {
-  app.use(
-    '*',
-    initAuthConfig((c) => {
-      const secret = process.env.AUTH_SECRET || c.env.AUTH_SECRET;
-      console.log('Initializing Auth.js with secret:', secret ? 'PRESENT' : 'MISSING');
-      return {
-        trustHost: true,
-        secret,
-        pages: {
-          signIn: '/account/signin',
-          signOut: '/account/logout',
-        },
+app.use(
+  '*',
+  initAuthConfig((c) => {
+    const secret = process.env.AUTH_SECRET || (c as any).env?.AUTH_SECRET || 'secretaria-app-auth-secret-key-2026';
+    console.log('Initializing Auth.js with secret:', secret ? 'PRESENT' : 'MISSING');
+    return {
+      trustHost: true,
+      secret,
+      pages: {
+        signIn: '/account/signin',
+        signOut: '/account/logout',
+        error: '/account/signin',
+      },
         session: {
           strategy: 'jwt',
         },
@@ -346,7 +346,6 @@ if (process.env.AUTH_SECRET) {
       };
     })
   );
-}
 
 app.use('/api/auth/*', authHandler());
 
@@ -374,9 +373,7 @@ app.all('/integrations/:path{.+}', async (c, next) => {
 
 app.route(API_BASENAME, api);
 
-export default process.env.VERCEL
-  ? app.fetch
-  : await createHonoServer({
-      app,
-      defaultLogger: false,
-    });
+export default await createHonoServer({
+  app,
+  defaultLogger: false,
+});
